@@ -24,3 +24,7 @@ pnpm-debug.log*
 Thumbs.db
 *.pem
 *.tsbuildinfo
+
+# Markdown files (except docs/)
+*.md
+!/docs/**/*.md

@@ -9,15 +9,9 @@ import { OAuthProfile } from '../types';
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   constructor(configService: ConfigService) {
     super({
-      clientID: configService.get<string>('GOOGLE_CLIENT_ID', 'disabled'),
-      clientSecret: configService.get<string>(
-        'GOOGLE_CLIENT_SECRET',
-        'disabled',
-      ),
-      callbackURL: configService.get<string>(
-        'GOOGLE_CALLBACK_URL',
-        'http://localhost:3000/api/auth/login/google/callback',
-      ),
+      clientID: configService.getOrThrow<string>('GOOGLE_CLIENT_ID'),
+      clientSecret: configService.getOrThrow<string>('GOOGLE_CLIENT_SECRET'),
+      callbackURL: configService.getOrThrow<string>('GOOGLE_CALLBACK_URL'),
       scope: ['email', 'profile'],
     });
   }

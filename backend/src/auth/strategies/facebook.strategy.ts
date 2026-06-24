@@ -9,15 +9,9 @@ import { OAuthProfile } from '../types';
 export class FacebookStrategy extends PassportStrategy(Strategy, 'facebook') {
   constructor(configService: ConfigService) {
     super({
-      clientID: configService.get<string>('FACEBOOK_APP_ID', 'disabled'),
-      clientSecret: configService.get<string>(
-        'FACEBOOK_APP_SECRET',
-        'disabled',
-      ),
-      callbackURL: configService.get<string>(
-        'FACEBOOK_CALLBACK_URL',
-        'http://localhost:3000/api/auth/login/facebook/callback',
-      ),
+      clientID: configService.getOrThrow<string>('FACEBOOK_APP_ID'),
+      clientSecret: configService.getOrThrow<string>('FACEBOOK_APP_SECRET'),
+      callbackURL: configService.getOrThrow<string>('FACEBOOK_CALLBACK_URL'),
       profileFields: ['id', 'displayName', 'emails'],
       scope: ['email'],
     });

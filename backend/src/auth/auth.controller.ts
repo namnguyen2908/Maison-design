@@ -90,7 +90,8 @@ export class AuthController {
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
-    return this.authService.oauthLogin(req.user as OAuthProfile, res);
+    const stateToken = req.query?.state as string | undefined;
+    return this.authService.oauthLogin(req.user as OAuthProfile, res, stateToken);
   }
 
   @UseGuards(FacebookAuthGuard)
@@ -107,6 +108,7 @@ export class AuthController {
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
-    return this.authService.oauthLogin(req.user as OAuthProfile, res);
+    const stateToken = req.query?.state as string | undefined;
+    return this.authService.oauthLogin(req.user as OAuthProfile, res, stateToken);
   }
 }

@@ -12,6 +12,7 @@ import type { AuthUser, JwtPayload, OAuthProfile } from './types';
 import { UsersService } from '../users/users.service';
 import { User } from '../users/entities/user.entity';
 import { RoleName } from '../roles/entities/role.entity';
+import { getAllowedOrigins, resolveRedirectUrl } from './state-token.util';
 
 type TokenPair = {
   accessToken: string;
@@ -67,23 +68,20 @@ export class AuthService {
     return this.toSafeUser(user);
   }
 
-  async oauthLogin(profile: OAuthProfile, response: Response) {
+  async oauthLogin(profile: OAuthProfile, response: Response, stateToken?: string) {
     const user = await this.usersService.upsertOAuthUser({
       ...profile,
       roleName: this.getRoleNameForEmail(profile.email),
     });
     await this.issueAuthCookies(user, response);
 
-    const frontendUrl = this.configService
-      .get<string>('FRONTEND_URL')
-      ?.split(',')[0]
-      ?.trim();
-    if (frontendUrl) {
-      response.redirect(frontendUrl);
-      return;
-    }
+    const allowedOrigins = getAllowedOrigins(
+      this.configService.get<string>('CORS_ORIGINS'),
+    );
+    const secret = this.configService.getOrThrow<string>('JWT_ACCESS_SECRET');
+    const targetUrl = resolveRedirectUrl(stateToken, allowedOrigins, secret);
 
-    return this.toSafeUser(user);
+    response.redirect(targetUrl);
   }
 
   async refresh(refreshToken: string | undefined, response: Response) {
@@ -197,13 +195,13 @@ export class AuthService {
 
   private getAccessTokenTtlSeconds(): number {
     return Number(
-      this.configService.get<string>('JWT_ACCESS_TTL_SECONDS', '900'),
+      this.configService.getOrThrow<string>('JWT_ACCESS_TTL_SECONDS'),
     );
   }
 
   private getRefreshTokenTtlSeconds(): number {
     return Number(
-      this.configService.get<string>('JWT_REFRESH_TTL_SECONDS', '604800'),
+      this.configService.getOrThrow<string>('JWT_REFRESH_TTL_SECONDS'),
     );
   }
 

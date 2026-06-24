@@ -13,7 +13,7 @@ export enum RoleName {
   SuperAdmin = 'super_admin',
   Admin = 'admin',
   Designer = 'designer',
-  Client = 'client',
+  Customer = 'customer',
 }
 
 @Entity('roles')
@@ -36,6 +36,9 @@ export class Role {
 
   @Column({ type: 'boolean', default: false })
   isSystem: boolean;
+
+  @Column({ type: 'jsonb', nullable: true })
+  permissions: string[] | null;
 
   @OneToMany(() => User, (user) => user.role)
   users: User[];

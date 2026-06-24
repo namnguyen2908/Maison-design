@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
+  IsArray,
   IsBoolean,
   IsNotEmpty,
   IsOptional,
@@ -31,4 +32,12 @@ export class CreateRoleDto {
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
+
+  @ApiPropertyOptional({
+    example: ['projects:read', 'projects:create'],
+  })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  permissions?: string[];
 }

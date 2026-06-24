@@ -1,0 +1,6 @@
+{
+  "required": "Trường {field} là bắt buộc",
+  "email": "Email không hợp lệ",
+  "minLength": "{field} phải có ít nhất {min} ký tự",
+  "maxLength": "{field} không được vượt quá {max} ký tự"
+}

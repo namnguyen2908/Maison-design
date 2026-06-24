@@ -1,0 +1,14 @@
+{
+  "created": "Project created successfully",
+  "updated": "Project updated",
+  "deleted": "Project deleted",
+  "notFound": "Project not found",
+  "stageCreated": "Stage added",
+  "stageUpdated": "Stage updated",
+  "stageDeleted": "Stage deleted",
+  "roomCreated": "Room added",
+  "roomUpdated": "Room updated",
+  "roomDeleted": "Room deleted",
+  "roomApproved": "Room approved",
+  "designUploaded": "Design uploaded"
+}

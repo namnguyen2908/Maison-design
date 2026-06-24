@@ -72,7 +72,7 @@ export class UsersService {
 
   async createLocalUser(input: CreateLocalUserInput): Promise<User> {
     const role = await this.rolesService.findOrCreateSystemRole(
-      input.roleName ?? RoleName.Client,
+      input.roleName ?? RoleName.Customer,
     );
     const user = this.usersRepository.create({
       email: input.email.toLowerCase(),
@@ -88,7 +88,7 @@ export class UsersService {
   async upsertOAuthUser(input: UpsertOAuthUserInput): Promise<User> {
     const existingUser = await this.findByEmail(input.email);
     const role = await this.rolesService.findOrCreateSystemRole(
-      input.roleName ?? RoleName.Client,
+      input.roleName ?? RoleName.Customer,
     );
 
     if (existingUser) {

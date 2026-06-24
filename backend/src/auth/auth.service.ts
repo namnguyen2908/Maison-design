@@ -138,6 +138,7 @@ export class AuthService {
       sub: user.id,
       email: user.email,
       role: user.role.name,
+      permissions: user.role.permissions ?? [],
     };
 
     const [accessToken, refreshToken] = await Promise.all([
@@ -212,6 +213,7 @@ export class AuthService {
       name: user.name,
       role: user.role.name,
       provider: user.provider,
+      permissions: user.role.permissions ?? [],
     };
   }
 
@@ -234,6 +236,6 @@ export class AuthService {
 
     return superAdminEmails.includes(email.trim().toLowerCase())
       ? RoleName.SuperAdmin
-      : RoleName.Client;
+      : RoleName.Customer;
   }
 }

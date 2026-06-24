@@ -1,0 +1,14 @@
+{
+  "created": "Đã tạo dự án thành công",
+  "updated": "Đã cập nhật dự án",
+  "deleted": "Đã xóa dự án",
+  "notFound": "Không tìm thấy dự án",
+  "stageCreated": "Đã thêm giai đoạn mới",
+  "stageUpdated": "Đã cập nhật giai đoạn",
+  "stageDeleted": "Đã xóa giai đoạn",
+  "roomCreated": "Đã thêm phòng mới",
+  "roomUpdated": "Đã cập nhật phòng",
+  "roomDeleted": "Đã xóa phòng",
+  "roomApproved": "Đã duyệt phòng",
+  "designUploaded": "Đã tải lên thiết kế"
+}

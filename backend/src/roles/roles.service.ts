@@ -2,37 +2,42 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  Logger,
   NotFoundException,
+  OnApplicationBootstrap,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
 import { Role, RoleName } from './entities/role.entity';
+import { RolePermissions, Permission } from '../common/permissions';
 
-const systemRoleLabels: Record<RoleName, string> = {
+const systemRoleLabels: Record<string, string> = {
   [RoleName.SuperAdmin]: 'Super Admin',
-  [RoleName.Admin]: 'Admin',
-  [RoleName.Designer]: 'Designer',
-  [RoleName.Client]: 'Client',
 };
 
 @Injectable()
-export class RolesService {
+export class RolesService implements OnApplicationBootstrap {
+  private readonly logger = new Logger(RolesService.name);
+
   constructor(
     @InjectRepository(Role)
     private readonly rolesRepository: Repository<Role>,
   ) {}
 
-  async findAll(): Promise<Role[]> {
+  async onApplicationBootstrap(): Promise<void> {
     await this.ensureSystemRoles();
+    this.logger.log('System roles seeded successfully');
+  }
+
+  async findAll(): Promise<Role[]> {
     return this.rolesRepository.find({
       order: { isSystem: 'DESC', name: 'ASC' },
     });
   }
 
   async findByName(name: string): Promise<Role | null> {
-    await this.ensureSystemRoles();
     return this.rolesRepository.findOne({
       where: { name: this.normalizeName(name), isActive: true },
     });
@@ -55,6 +60,11 @@ export class RolesService {
         return this.rolesRepository.save(existingRole);
       }
 
+      if (!existingRole.permissions) {
+        existingRole.permissions = RolePermissions[roleName] ?? [];
+        return this.rolesRepository.save(existingRole);
+      }
+
       return existingRole;
     }
 
@@ -64,6 +74,7 @@ export class RolesService {
       description: null,
       isActive: true,
       isSystem: true,
+      permissions: RolePermissions[roleName] ?? [],
     });
 
     return this.rolesRepository.save(role);
@@ -85,6 +96,7 @@ export class RolesService {
       description: dto.description ?? null,
       isActive: dto.isActive ?? true,
       isSystem: false,
+      permissions: dto.permissions ?? null,
     });
 
     return this.rolesRepository.save(role);
@@ -102,7 +114,7 @@ export class RolesService {
     if (dto.isActive !== undefined) {
       if (
         role.isSystem &&
-        role.name === String(RoleName.SuperAdmin) &&
+        role.name === RoleName.SuperAdmin &&
         !dto.isActive
       ) {
         throw new BadRequestException('SUPER_ADMIN role cannot be disabled');
@@ -134,11 +146,7 @@ export class RolesService {
   }
 
   private async ensureSystemRoles(): Promise<void> {
-    await Promise.all(
-      Object.values(RoleName).map((roleName) =>
-        this.findOrCreateSystemRole(roleName),
-      ),
-    );
+    await this.findOrCreateSystemRole(RoleName.SuperAdmin);
   }
 
   private normalizeName(name: string): string {

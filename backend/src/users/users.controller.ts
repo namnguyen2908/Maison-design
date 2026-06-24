@@ -1,4 +1,4 @@
-import { Body, Controller, Param, Patch, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, UseGuards } from '@nestjs/common';
 import { ApiCookieAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Roles } from '../common/decorators/roles.decorator';
@@ -13,6 +13,20 @@ import { UsersService } from './users.service';
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
+
+  @Get()
+  @Roles(RoleName.SuperAdmin)
+  @ApiOperation({ summary: 'List all users' })
+  findAll() {
+    return this.usersService.findAll();
+  }
+
+  @Get(':id')
+  @Roles(RoleName.SuperAdmin, RoleName.Admin)
+  @ApiOperation({ summary: 'Get user by ID' })
+  findOne(@Param('id') id: string) {
+    return this.usersService.findById(id);
+  }
 
   @Patch(':id/role')
   @Roles(RoleName.SuperAdmin)

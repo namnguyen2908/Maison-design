@@ -32,8 +32,18 @@ export class UsersService {
     private readonly rolesService: RolesService,
   ) {}
 
+  findAll(): Promise<User[]> {
+    return this.usersRepository.find({
+      relations: { role: true },
+      order: { createdAt: 'DESC' },
+    });
+  }
+
   findById(id: string): Promise<User | null> {
-    return this.usersRepository.findOne({ where: { id, isActive: true } });
+    return this.usersRepository.findOne({
+      where: { id, isActive: true },
+      relations: { role: true },
+    });
   }
 
   findByEmail(email: string): Promise<User | null> {

@@ -2,22 +2,20 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { fetchMe } from "@/lib/api";
+import { useAxios } from "@/hooks/use-axios";
+import type { SafeUser } from "@/hooks/use-axios";
 
 export default function HomePage() {
   const router = useRouter();
+  const { data, error } = useAxios<SafeUser>("/api/auth/me");
 
   useEffect(() => {
-    async function checkAuth() {
-      try {
-        await fetchMe();
-        router.replace("/dashboard");
-      } catch {
-        router.replace("/login");
-      }
-    }
-    checkAuth();
-  }, [router]);
+    if (data) router.replace("/dashboard");
+  }, [data, router]);
+
+  useEffect(() => {
+    if (error) router.replace("/login");
+  }, [error, router]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-bg">

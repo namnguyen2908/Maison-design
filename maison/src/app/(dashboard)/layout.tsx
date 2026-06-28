@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect, createContext, useContext } from "react";
+import { useState, createContext, useContext, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { fetchMe, logout, type SafeUser } from "@/lib/api";
+import { useAxios, useAxiosMutation } from "@/hooks/use-axios";
+import type { SafeUser } from "@/hooks/use-axios";
 
 interface AuthContextType {
   user: SafeUser | null;
@@ -173,9 +174,11 @@ function Header() {
   const { user, refresh } = useAuth();
   const router = useRouter();
 
+  const { trigger: logoutTrigger } = useAxiosMutation();
+
   async function handleLogout() {
     try {
-      await logout();
+      await logoutTrigger({ url: "/api/auth/logout", method: "POST" });
       router.push("/login");
     } catch (error) {
       console.error("Logout failed:", error);
@@ -213,32 +216,14 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [user, setUser] = useState<SafeUser | null>(null);
-  const [loading, setLoading] = useState(true);
   const router = useRouter();
-
-  const refresh = async () => {
-    try {
-      const userData = await fetchMe();
-      setUser(userData);
-    } catch {
-      setUser(null);
-    }
-  };
+  const { data: user, error, isLoading, mutate } = useAxios<SafeUser>("/api/auth/me");
+  const refresh = async () => { await mutate(); };
+  const loading = isLoading;
 
   useEffect(() => {
-    async function checkAuth() {
-      try {
-        const userData = await fetchMe();
-        setUser(userData);
-      } catch {
-        router.push("/login");
-      } finally {
-        setLoading(false);
-      }
-    }
-    checkAuth();
-  }, [router]);
+    if (error) router.push("/login");
+  }, [error, router]);
 
   if (loading) {
     return (
@@ -255,7 +240,7 @@ export default function DashboardLayout({
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, refresh }}>
+    <AuthContext.Provider value={{ user: user ?? null, loading, refresh }}>
       <div className="min-h-screen bg-bg">
         <Sidebar />
         <Header />

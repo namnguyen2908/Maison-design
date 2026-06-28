@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, FormEvent, useRef } from "react";
+import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { loginLocal, googleLoginUrl, facebookLoginUrl } from "@/lib/api";
+import { useAxiosMutation } from "@/hooks/use-axios";
 
 const ease = [0.25, 0.1, 0.25, 1] as const;
 
@@ -19,30 +19,26 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const emailRef = useRef<HTMLInputElement>(null);
+  const { trigger: login, isMutating: loading } = useAxiosMutation();
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError("");
-    setLoading(true);
 
     try {
-      await loginLocal(email, password);
+      await login({ url: "/api/auth/login", method: "POST", body: { email, password } });
       router.push("/");
     } catch (err: unknown) {
-      if (err && typeof err === "object" && "response" in err) {
-        const axiosErr = err as { response?: { status?: number; data?: { message?: string } } };
-        if (axiosErr.response?.status === 401) {
+      if (err && typeof err === "object" && "status" in (err as any)) {
+        const apiErr = err as { status?: number; message?: string };
+        if (apiErr.status === 401) {
           setError("Email hoặc mật khẩu không đúng");
         } else {
-          setError(axiosErr.response?.data?.message ?? "Đã có lỗi xảy ra");
+          setError(apiErr.message ?? "Đã có lỗi xảy ra");
         }
       } else {
         setError("Không thể kết nối đến máy chủ");
       }
-    } finally {
-      setLoading(false);
     }
   }
 
@@ -60,7 +56,6 @@ export default function LoginPage() {
       <motion.form {...fadeUp(0.2)} onSubmit={handleSubmit} className="space-y-5">
         <div className="group relative">
           <input
-            ref={emailRef}
             id="email"
             type="email"
             required
@@ -152,7 +147,7 @@ export default function LoginPage() {
 
       <motion.div {...fadeUp(0.35)} className="space-y-3">
         <a
-          href={googleLoginUrl}
+          href="/api/auth/login/google"
           className="flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-border-light bg-surface text-sm font-medium text-text transition-all duration-200 hover:border-primary/20 hover:shadow-sm"
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24">
@@ -165,7 +160,7 @@ export default function LoginPage() {
         </a>
 
         <a
-          href={facebookLoginUrl}
+          href="/api/auth/login/facebook"
           className="flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-border-light bg-surface text-sm font-medium text-text transition-all duration-200 hover:border-primary/20 hover:shadow-sm"
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24" fill="#1877F2">

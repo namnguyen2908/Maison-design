@@ -4,7 +4,7 @@ import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { registerLocal } from "@/lib/api";
+import { useAxiosMutation } from "@/hooks/use-axios";
 
 const ease = [0.25, 0.1, 0.25, 1] as const;
 
@@ -20,29 +20,26 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const { trigger: register, isMutating: loading } = useAxiosMutation();
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError("");
-    setLoading(true);
 
     try {
-      await registerLocal(name, email, password);
+      await register({ url: "/api/auth/register", method: "POST", body: { name, email, password } });
       router.push("/");
     } catch (err: unknown) {
-      if (err && typeof err === "object" && "response" in err) {
-        const axiosErr = err as { response?: { status?: number; data?: { message?: string } } };
-        if (axiosErr.response?.status === 409) {
+      if (err && typeof err === "object" && "status" in (err as any)) {
+        const apiErr = err as { status?: number; message?: string };
+        if (apiErr.status === 409) {
           setError("Email này đã được đăng ký");
         } else {
-          setError(axiosErr.response?.data?.message ?? "Đã có lỗi xảy ra");
+          setError(apiErr.message ?? "Đã có lỗi xảy ra");
         }
       } else {
         setError("Không thể kết nối đến máy chủ");
       }
-    } finally {
-      setLoading(false);
     }
   }
 

@@ -1,31 +1,28 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { getRoles, createRole, updateRole, deleteRole, type RoleItem } from "@/lib/api";
+import { useState } from "react";
+import { useAxios, useAxiosMutation } from "@/hooks/use-axios";
+
+type RoleItem = {
+  id: string;
+  name: string;
+  label: string;
+  description: string | null;
+  isActive: boolean;
+  isSystem: boolean;
+  createdAt: string;
+};
 
 export default function RolesPage() {
-  const [roles, setRoles] = useState<RoleItem[]>([]);
-  const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingRole, setEditingRole] = useState<RoleItem | null>(null);
   const [formName, setFormName] = useState("");
   const [formLabel, setFormLabel] = useState("");
   const [formDescription, setFormDescription] = useState("");
 
-  useEffect(() => {
-    loadRoles();
-  }, []);
-
-  async function loadRoles() {
-    try {
-      const data = await getRoles();
-      setRoles(data);
-    } catch (error) {
-      console.error("Failed to load roles:", error);
-    } finally {
-      setLoading(false);
-    }
-  }
+  const { data: roles, isLoading, mutate } = useAxios<RoleItem[]>("/api/roles");
+  const { trigger: saveRole } = useAxiosMutation();
+  const { trigger: deleteRole } = useAxiosMutation();
 
   function openCreateModal() {
     setEditingRole(null);
@@ -47,19 +44,20 @@ export default function RolesPage() {
     if (!formName.trim() || !formLabel.trim()) return;
     try {
       if (editingRole) {
-        await updateRole(editingRole.id, {
-          label: formLabel,
-          description: formDescription || undefined,
+        await saveRole({
+          url: `/api/roles/${editingRole.id}`,
+          method: "PATCH",
+          body: { label: formLabel, description: formDescription || undefined },
         });
       } else {
-        await createRole({
-          name: formName,
-          label: formLabel,
-          description: formDescription || undefined,
+        await saveRole({
+          url: "/api/roles",
+          method: "POST",
+          body: { name: formName, label: formLabel, description: formDescription || undefined },
         });
       }
       setShowModal(false);
-      loadRoles();
+      mutate();
     } catch (error) {
       console.error("Failed to save role:", error);
     }
@@ -68,14 +66,14 @@ export default function RolesPage() {
   async function handleDeleteRole(id: string) {
     if (!confirm("Bạn có chắc chắn muốn xóa vai trò này?")) return;
     try {
-      await deleteRole(id);
-      loadRoles();
+      await deleteRole({ url: `/api/roles/${id}`, method: "DELETE" });
+      mutate();
     } catch (error) {
       console.error("Failed to delete role:", error);
     }
   }
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="flex items-center gap-3 text-sm text-secondary">
@@ -116,7 +114,7 @@ export default function RolesPage() {
             </tr>
           </thead>
           <tbody>
-            {roles.map((role) => (
+            {(roles ?? []).map((role) => (
               <tr key={role.id} className="border-b border-border last:border-b-0">
                 <td className="px-6 py-4">
                   <span className="text-sm font-medium text-text">{role.name}</span>
@@ -149,7 +147,7 @@ export default function RolesPage() {
                 </td>
               </tr>
             ))}
-            {roles.length === 0 && (
+            {(roles ?? []).length === 0 && (
               <tr>
                 <td colSpan={5} className="px-6 py-12 text-center text-sm text-secondary">
                   Chưa có vai trò nào
